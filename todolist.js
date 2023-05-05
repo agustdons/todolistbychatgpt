@@ -21,11 +21,17 @@ function createTaskItem(taskText) {
     const doneTask = document.createElement('li');
     doneTask.textContent = taskText;
     taskDoneList.appendChild(doneTask);
+
+    // Save tasks to local storage
+    saveTasksToLocalStorage();
   });
 
   const inProcessButton = taskItem.querySelector('.in-process-btn');
   inProcessButton.addEventListener('click', () => {
     taskItem.classList.toggle('in-process');
+
+    // Save tasks to local storage
+    saveTasksToLocalStorage();
   });
 
   taskItem.addEventListener('dragstart', (event) => {
@@ -48,6 +54,9 @@ function addTask(event) {
     const taskItem = createTaskItem(taskText);
     taskList.appendChild(taskItem);
     input.value = '';
+
+    // Save tasks to local storage
+    saveTasksToLocalStorage();
   }
 }
 
@@ -61,21 +70,39 @@ function handleTaskDragAndDrop(event) {
     const draggedTaskIndex = taskItems.findIndex(
       (task) => task.querySelector('.task-text').textContent === draggedTaskText
     );
-    const targetTaskIndex = taskItems.findIndex(
-      (task) => task === targetTask
-    );
+    const targetTaskIndex = taskItems.findIndex((task) => task === targetTask);
     if (draggedTaskIndex !== -1 && targetTaskIndex !== -1 && draggedTaskIndex !== targetTaskIndex) {
       const [removedTask] = taskItems.splice(draggedTaskIndex, 1);
       taskItems.splice(targetTaskIndex, 0, removedTask);
       taskList.innerHTML = '';
       taskItems.forEach((taskItem) => taskList.appendChild(taskItem));
     }
+    // Save tasks to local storage
+    saveTasksToLocalStorage();
   }
 }
 
 // Function to clear all done tasks
 function clearTasks() {
   taskDoneList.innerHTML = '';
+
+  // Save tasks to local storage
+  saveTasksToLocalStorage();
+}
+
+// Function to save tasks to local storage
+function saveTasksToLocalStorage() {
+  const tasks = Array.from(taskList.querySelectorAll('.task-text')).map((task) => task.textContent);
+  localStorage.setItem('tasks', JSON.stringify(tasks));
+}
+
+// Function to load tasks from local storage
+function loadTasksFromLocalStorage() {
+  const tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+  tasks.forEach((taskText) => {
+    const taskItem = createTaskItem(taskText);
+    taskList.appendChild(taskItem);
+  });
 }
 
 // Event listeners
@@ -83,3 +110,7 @@ form.addEventListener('submit', addTask);
 taskList.addEventListener('dragover', (event) => event.preventDefault());
 taskList.addEventListener('drop', handleTaskDragAndDrop);
 clearTasksBtn.addEventListener('click', clearTasks);
+
+// Load tasks from local storage on page load
+loadTasksFromLocalStorage();
+
